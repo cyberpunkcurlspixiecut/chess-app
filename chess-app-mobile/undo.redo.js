@@ -11,6 +11,33 @@ window.registerPlugin((ctx) => {
     past: [],
     future: [],
 
+    rebuildCaptures(board) {
+      if (!ctx.capture || typeof ctx.capture.clear !== "function") return;
+
+      ctx.capture.clear();
+
+      const initial = {
+        P: 8, R: 2, N: 2, B: 2, Q: 1, K: 1,
+        p: 8, r: 2, n: 2, b: 2, q: 1, k: 1
+      };
+
+      const counts = { ...initial };
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const ch = board[r][c];
+          if (ch && counts[ch] > 0) counts[ch]--;
+        }
+      }
+
+      Object.keys(counts).forEach(ch => {
+        const missing = counts[ch];
+        for (let i = 0; i < missing; i++) {
+          ctx.capture.add(ch);
+        }
+      });
+    },
+
     // ---------------------------------------------------------
     // SNAPSHOT — save full game state (BEFORE a move)
     // ---------------------------------------------------------
@@ -19,12 +46,11 @@ window.registerPlugin((ctx) => {
 
       this.past.push({
         fen: ctx.game.fen,
-        turn: ctx.game.turn,                 // "w" or "b"
+        turn: ctx.game.turn,
         board: JSON.parse(JSON.stringify(ctx.game.board)),
-        moves: [...ctx.logic.getMoveHistoryUCI()] // FULL move list
+        moves: [...ctx.logic.getMoveHistoryUCI()]
       });
 
-      // once new move happens → redo stack cleared
       this.future = [];
     },
 
@@ -34,27 +60,23 @@ window.registerPlugin((ctx) => {
     restore(state) {
       if (!state) return;
 
-      // restore raw game state
       ctx.game.fen   = state.fen;
       ctx.game.turn  = state.turn;
       ctx.game.board = JSON.parse(JSON.stringify(state.board));
 
-      // restore move history
       ctx.logic.setMoveHistoryUCI([...state.moves]);
 
-      // 🔁 keep logic.js in sync with ctx.game.turn
-      //    (this was the main reason moves failed after undo/redo)
       ctx.logic.currentTurn = (state.turn === "w") ? "white" : "black";
       ctx.logic.gameOver    = false;
 
-      // clear highlights + re-render board
       ctx.board.clearHighlights();
       ctx.board.render?.();
 
-      // optional: reset status text
       if (ctx.statusEl) {
         ctx.statusEl.textContent = "";
       }
+
+      this.rebuildCaptures(state.board);
     },
 
     // ---------------------------------------------------------
@@ -63,7 +85,6 @@ window.registerPlugin((ctx) => {
     undo() {
       if (this.past.length === 0) return;
 
-      // save current state into future
       const current = {
         fen: ctx.game.fen,
         turn: ctx.game.turn,
@@ -72,16 +93,12 @@ window.registerPlugin((ctx) => {
       };
       this.future.push(current);
 
-      // restore previous
       const prev = this.past.pop();
       this.restore(prev);
 
       if (ctx.statusEl) ctx.statusEl.textContent = "Undo";
 
-      // prevent AI from instantly moving after undo
       if (ctx.ai && ctx.ai.isActive && ctx.ai.isActive()) {
-        // we can't touch internal "thinking" flag directly,
-        // but we at least avoid triggering playTurn here
       }
     },
 
@@ -91,7 +108,6 @@ window.registerPlugin((ctx) => {
     redo() {
       if (this.future.length === 0) return;
 
-      // save current into past
       this.past.push({
         fen: ctx.game.fen,
         turn: ctx.game.turn,
@@ -99,15 +115,12 @@ window.registerPlugin((ctx) => {
         moves: [...ctx.logic.getMoveHistoryUCI()]
       });
 
-      // restore next
       const next = this.future.pop();
       this.restore(next);
 
       if (ctx.statusEl) ctx.statusEl.textContent = "Redo";
 
-      // prevent AI from auto‑moving unless explicitly requested later
       if (ctx.ai && ctx.ai.isActive && ctx.ai.isActive()) {
-        // same note as in undo()
       }
     }
   };
