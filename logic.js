@@ -113,6 +113,12 @@ const Logic = (function () {
   moveObjects = [...state.moveObjects];
   gameOver = state.gameOver;
 
+  if (typeof scene !== "undefined") {
+    scene.children
+      .filter(o => o.userData && o.userData.type === "piece")
+      .forEach(o => scene.remove(o));
+  }
+
   for (let r = 0; r < size; r++) {
     for (let f = 0; f < size; f++) {
       const p = board[r][f];
@@ -130,6 +136,7 @@ const Logic = (function () {
     }
   }
 }
+
 
 // ============================================================
 // MOVE REQUEST (PLAYER)

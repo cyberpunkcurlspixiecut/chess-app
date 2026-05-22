@@ -20,20 +20,62 @@ const UndoRedo = (function () {
     index = history.length - 1;
   }
 
-  // ------------------------------------------------------------
-  // PUBLIC: UNDO
-  // ------------------------------------------------------------
-  function undo() {
-    if (index <= 0) return;
-    index--;
+ // ------------------------------------------------------------
+// PUBLIC: UNDO
+// ------------------------------------------------------------
+function undo() {
+  if (index <= 0) return;
+  index--;
 
-    const state = history[index];
-    if (!state) return;
+  const state = history[index];
+  if (!state) return;
 
-    if (typeof Logic !== "undefined" && Logic && typeof Logic.importState === "function") {
-      Logic.importState(state);
+  if (typeof Logic !== "undefined" && Logic && typeof Logic.importState === "function") {
+    Logic.importState(state);
+  }
+
+  if (typeof CapturedDisplay !== "undefined") {
+    if (typeof CapturedDisplay.clear === "function") {
+      CapturedDisplay.clear();
+    }
+    if (Array.isArray(state.moveObjects)) {
+      state.moveObjects.forEach(mv => {
+        if (mv.captured) {
+          CapturedDisplay.addCaptured(mv.captured);
+        }
+      });
     }
   }
+}
+
+// ------------------------------------------------------------
+// PUBLIC: REDO
+// ------------------------------------------------------------
+function redo() {
+  if (index >= history.length - 1) return;
+  index++;
+
+  const state = history[index];
+  if (!state) return;
+
+  if (typeof Logic !== "undefined" && Logic && typeof Logic.importState === "function") {
+    Logic.importState(state);
+  }
+
+  if (typeof CapturedDisplay !== "undefined") {
+    if (typeof CapturedDisplay.clear === "function") {
+      CapturedDisplay.clear();
+    }
+    if (Array.isArray(state.moveObjects)) {
+      state.moveObjects.forEach(mv => {
+        if (mv.captured) {
+          CapturedDisplay.addCaptured(mv.captured);
+        }
+      });
+    }
+  }
+}
+
 
   // ------------------------------------------------------------
   // PUBLIC: REDO
