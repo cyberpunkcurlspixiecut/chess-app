@@ -2,7 +2,6 @@
 // MOBILE ONLY CHECK
 // ---------------------------------------------------------
 
-
 // ---------------------------------------------------------
 // PLUGIN REGISTRY
 // ---------------------------------------------------------
@@ -62,54 +61,45 @@ function fenToBoard(fen) {
 // NEW GAME (RESET BOARD + LOGIC + ORIENTATION + CAPTURE CLEAR)
 // ---------------------------------------------------------
 function newGame(ctx) {
-  // Reset game state
   game.fen = START_FEN;
   game.turn = "w";
   game.selected = null;
   game.board = fenToBoard(START_FEN);
 
-  // reset logic.js internal state
   if (ctx.logic && typeof ctx.logic.init === "function") {
     ctx.logic.init();
   }
 
-  // Reset undo/redo stacks
   if (ctx.history) {
     ctx.history.past = [];
     ctx.history.future = [];
   }
 
-  // Reset move history inside logic
   if (ctx.logic && typeof ctx.logic.setMoveHistoryUCI === "function") {
     ctx.logic.setMoveHistoryUCI([]);
   }
 
-  // Reset board visuals
   ctx.board.clearHighlights?.();
   ctx.board.unflip?.();
   ctx.board.render?.();
 
-  // Clear captured icons (added fix)
   if (ctx.capture && typeof ctx.capture.clear === "function") {
     ctx.capture.clear();
   }
 
-  // Remove any status text
   if (statusEl) {
     statusEl.textContent = "";
   }
 
   ctx.sound.start?.();
 
-  // Player always at bottom
   const color = ctx.playerColor || playerColor || "white";
   if (color === "white") {
-    ctx.board.flip?.();   // white bottom
+    ctx.board.flip?.();
   } else {
-    ctx.board.unflip?.(); // black bottom
+    ctx.board.unflip?.();
   }
 
-  // Reset Stockfish engine
   if (ctx.ai?.engine) {
     ctx.ai.engine.postMessage("ucinewgame");
     ctx.ai.engine.postMessage("isready");
@@ -140,18 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
     history: {},
     sound: {},
     board: {},
-    capture: {} // ensure capture plugin is accessible
+    capture: {}
   };
 
-  // Load all plugins
   EngineCore.init(ctx);
 
-  // Initialize AI
   if (ctx.ai && typeof ctx.ai.init === "function") {
     ctx.ai.init();
   }
 
-  // Start default game
   ctx.playerColor = playerColor;
   newGame(ctx);
 
@@ -163,6 +150,16 @@ document.addEventListener("DOMContentLoaded", () => {
     aiBtn.addEventListener("click", () => {
       ctx.sound.click?.();
       aiOverlay.classList.remove("hidden");
+    });
+  }
+
+  // ⭐ MOBILE FIX — CLICK OUTSIDE PANEL TO CLOSE
+  const aiPanel = document.querySelector("#aiOverlay .overlay-content");
+  if (aiOverlay && aiPanel) {
+    aiOverlay.addEventListener("click", (e) => {
+      if (!aiPanel.contains(e.target)) {
+        aiOverlay.classList.add("hidden");
+      }
     });
   }
 
@@ -194,10 +191,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       ctx.playerColor = playerColor;
 
-      // full reset (board + logic + history + engine + capture clear)
       newGame(ctx);
 
-      // Start AI game
       if (ctx.ai && typeof ctx.ai.startGame === "function") {
         const aiColor = playerColor === "white" ? "black" : "white";
 
