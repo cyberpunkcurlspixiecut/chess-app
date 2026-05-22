@@ -137,7 +137,6 @@ const Logic = (function () {
   }
 }
 
-
 // ============================================================
 // MOVE REQUEST (PLAYER)
 // ============================================================
@@ -191,10 +190,12 @@ function requestMove(data, tr, tf) {
     };
   }
 
- // ============================================================
+// ============================================================
 // COMMIT MOVE (HUMAN + AI)
 // ============================================================
 function commitMove(mv, mode) {
+
+console.log("commitMove mode =", mode);
   const { piece, from, to, captured } = mv;
 
   performMove(piece, to.r, to.f);
@@ -208,6 +209,18 @@ function commitMove(mv, mode) {
 
   const isAI = mode === "ai";
 
+  if (!isAI && piece.userData.role === "pawn") {
+    const lastRank = piece.userData.color === "white" ? 0 : 7;
+    if (to.r === lastRank) {
+      pendingUpdatePiece = { piece, from, to, captured };
+      if (typeof showUpdatePieceUI === "function") {
+        showUpdatePieceUI(piece.userData.color);
+      }
+      Board.highlightMove?.(from.r, from.f, to.r, to.f, mode);
+      return;
+    }
+  }
+
   recordUCIMove(from.r, from.f, to.r, to.f);
 
   mv.nextState = exportState();
@@ -219,7 +232,7 @@ function commitMove(mv, mode) {
   }
 
   if (typeof Sound !== "undefined") {
-    if (mode === "capture") Sound.capture?.();
+    if (captured) Sound.capture?.();
     else Sound.move?.();
   }
 
@@ -253,10 +266,11 @@ function commitMove(mv, mode) {
   }
 }
 
-  // ============================================================
-  // APPLY UCI MOVE (AI)
-  // ============================================================
-  function applyUCIMove(uci) {
+
+// ============================================================
+// APPLY UCI MOVE (AI)
+// ============================================================
+function applyUCIMove(uci) {
   if (gameOver) return;
 
   const files = "abcdefgh";
@@ -335,7 +349,7 @@ function commitMove(mv, mode) {
   // Normal AI move
   const captured = board[tr][tf] || null;
   const mv = buildMoveObject(piece, sr, sf, tr, tf, captured);
-  commitMove(mv, captured ? "capture" : "ai");
+  commitMove(mv, "ai");
 
   // ============================================================
   // AI auto-promotion to queen + FIX UCI
@@ -380,6 +394,7 @@ function commitMove(mv, mode) {
   function getMoveHistoryUCI() {
     return moveHistory.slice();
   }
+
 // ============================================================
 // CASTLING (HUMAN)
 // ============================================================
@@ -653,46 +668,52 @@ function _isLegalMove(piece, tr, tf) {
   }
 
   function updatePawn(piece, newRole) {
-    const color = piece.userData.color;
-    const r = piece.userData.rank;
-    const f = piece.userData.file;
+  const color = piece.userData.color;
+  const r = piece.userData.rank;
+  const f = piece.userData.file;
 
-    const template = findTemplatePiece(newRole, color);
+  const template = findTemplatePiece(newRole, color);
 
-    if (template && typeof template.clone === "function") {
-      piece.visible = false;
+  if (template && typeof template.clone === "function") {
+    piece.visible = false;
 
-      const newMesh = template.clone();
-      newMesh.userData = {
-        type: "piece",
-        color,
-        role: newRole,
-        rank: r,
-        file: f
-      };
+    const newMesh = template.clone(true);
+    newMesh.userData = {
+      type: "piece",
+      color,
+      role: newRole,
+      rank: r,
+      file: f
+    };
 
-      board[r][f] = newMesh;
+    board[r][f] = newMesh;
 
-      const pos = Board.worldPosition(r, f);
-      newMesh.position.set(pos.x, 0, pos.z);
+    const pos = Board.worldPosition(r, f);
+    newMesh.position.set(pos.x, 0, pos.z);
 
-      if (typeof scene !== "undefined") {
-        scene.add(newMesh);
+    if (typeof scene !== "undefined" && !newMesh.parent) {
+      scene.add(newMesh);
+    }
+
+    if (typeof Pieces !== "undefined" && Array.isArray(Pieces.list)) {
+      const idx = Pieces.list.indexOf(piece);
+      if (idx !== -1) {
+        Pieces.list[idx] = newMesh;
+      } else {
+        Pieces.list.push(newMesh);
       }
-    } else {
-      piece.userData.role = newRole;
-      board[r][f] = piece;
-      const pos = Board.worldPosition(r, f);
-      piece.position.set(pos.x, 0, pos.z);
-      piece.visible = true;
     }
-
-    if (typeof Pieces !== "undefined" && typeof Pieces.update === "function") {
-      Pieces.update();
-    }
-
-    console.log(`[UPDATE] ${color} pawn → ${newRole}`);
+  } else {
+    piece.userData.role = newRole;
+    board[r][f] = piece;
+    const pos = Board.worldPosition(r, f);
+    piece.position.set(pos.x, 0, pos.z);
+    piece.visible = true;
   }
+
+  console.log(`[UPDATE] ${color} pawn → ${newRole}`);
+}
+
 
   function showUpdatePieceUI(color) {
     const overlay =
