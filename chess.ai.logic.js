@@ -83,11 +83,8 @@ function validateAIMove(uci) {
 }
 
   function applyAIMove(uci) {
-    if (!validateAIMove(uci)) {
-      forceResyncAndRetry();
-      return;
-    }
-
+  return;
+}
     Logic.applyUCIMove(uci);
     syncEngine();
   }
@@ -97,10 +94,10 @@ function validateAIMove(uci) {
   }
 
   return {
-    syncEngine,
-    validateAIMove,
-    applyAIMove,
-    onHumanMove
-  };
+  syncEngine,
+  validateAIMove,
+  onHumanMove
+};
+
 
 })();
