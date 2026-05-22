@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chess</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- TOP BAR: AI BUTTON ONLY -->
+    <header class="top-bar">
+      <button id="aiBtn" class="ai-btn">AI</button>
+    </header>
+
+    <!-- WHITE CAPTURE BAR (TOP / OR SWAPPED BY JS) -->
+    <div id="whiteCaptures" class="capture-bar top-captures"></div>
+
+    <!-- BOARD + FOOTER -->
+    <main>
+
+      <div id="board"></div>
+
+      <!-- CONTROL BAR UNDER BOARD -->
+      <div class="controls">
+        <button id="undoBtn" class="ctrl-btn">Undo</button>
+        <button id="redoBtn" class="ctrl-btn">Redo</button>
+        <button id="flipBtn" class="ctrl-btn">Flip</button>
+        <button id="themeBtn" class="ctrl-btn">Theme</button>
+      </div>
+
+    </main>
+
+    <!-- BLACK CAPTURE BAR (BOTTOM / OR SWAPPED BY JS) -->
+    <div id="blackCaptures" class="capture-bar bottom-captures"></div>
+
+  </div>
+
+  <!-- AI SETTINGS OVERLAY -->
+  <div id="aiOverlay" class="overlay hidden">
+    <div class="overlay-content">
+
+      <div class="overlay-section">
+        <div class="overlay-label">Chess Pieces</div>
+        <div class="color-select">
+          <button class="color-btn" data-color="white">White</button>
+          <button class="color-btn" data-color="black">Black</button>
+        </div>
+      </div>
+
+      <div class="overlay-section">
+        <div class="overlay-label">AI Difficulty</div>
+        <div class="difficulty-select">
+          <button class="difficulty-btn" data-level="beginner">Beginner</button>
+          <button class="difficulty-btn" data-level="medium">Medium</button>
+          <button class="difficulty-btn" data-level="hard">Hard</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="promotionOverlay" class="promotion-overlay" style="display:none;">
+    <div class="promotion-box">
+      <div class="promotion-piece" data-piece="q">Queen</div>
+      <div class="promotion-piece" data-piece="r">Rook</div>
+      <div class="promotion-piece" data-piece="n">Knight</div>
+      <div class="promotion-piece" data-piece="b">Bishop</div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="app.js"></script>
+  <script src="sound.js"></script>
+  <script src="pieces.movement.js"></script>
+  <script src="engine.js"></script>
+  <script src="pieces.js"></script>
+  <script src="chess.ai.js"></script>
+  <script src="logic.js"></script>
+  <script src="movement.js"></script>
+  <script src="board.js"></script>
+  <script src="capture.js"></script>
+  <script src="flip.js"></script>
+  <script src="undo.redo.js"></script>
+  <script src="theme.js"></script>
+  <script src="ui.js"></script>
+
+</body>
+</html>
