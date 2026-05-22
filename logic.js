@@ -102,30 +102,35 @@ const Logic = (function () {
     };
   }
 
-  function importState(state) {
-    board = state.board.map(row =>
-      row.map(cell => cell ? cell.mesh : null)
-    );
+ function importState(state) {
+  board = state.board.map(row =>
+    row.map(cell => cell ? cell.mesh : null)
+  );
 
-    currentTurn = state.currentTurn;
-    moved = JSON.parse(JSON.stringify(state.moved));
-    moveHistory = [...state.moveHistory];
-    moveObjects = [...state.moveObjects];
-    gameOver = state.gameOver;
+  currentTurn = state.currentTurn;
+  moved = JSON.parse(JSON.stringify(state.moved));
+  moveHistory = [...state.moveHistory];
+  moveObjects = [...state.moveObjects];
+  gameOver = state.gameOver;
 
-    for (let r = 0; r < size; r++) {
-      for (let f = 0; f < size; f++) {
-        const p = board[r][f];
-        if (p) {
-          const pos = Board.worldPosition(r, f);
-          p.position.set(pos.x, 0, pos.z);
-          p.visible = true;
-          p.userData.rank = r;
-          p.userData.file = f;
+  for (let r = 0; r < size; r++) {
+    for (let f = 0; f < size; f++) {
+      const p = board[r][f];
+      if (p) {
+        const pos = Board.worldPosition(r, f);
+        p.position.set(pos.x, 0, pos.z);
+        p.visible = true;
+        p.userData.rank = r;
+        p.userData.file = f;
+
+        if (!p.parent && typeof scene !== "undefined") {
+          scene.add(p);
         }
       }
     }
   }
+}
+
 // ============================================================
 // MOVE REQUEST (PLAYER)
 // ============================================================
