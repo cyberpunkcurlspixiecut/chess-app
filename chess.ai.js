@@ -111,11 +111,7 @@ const ChessAI = (function () {
           }
         }
 
-        if (typeof AILogic !== "undefined" && AILogic.applyAIMove) {
-          AILogic.applyAIMove(move);
-        } else {
-          Logic.applyUCIMove(move);
-        }
+        Logic.applyUCIMove(move);
 
         if (typeof Sound !== "undefined") {
           Sound.move?.();
